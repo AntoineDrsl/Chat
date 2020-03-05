@@ -33,20 +33,38 @@
             insertMessage(data.pseudo, data.message)
         })
 
+        socket.on('whisper', function(data) {
+            insertWhisper(data.pseudo, data.message)
+        })
+
         socket.on('newClient', function(pseudo) {
             $('#chat').prepend('<p><em>' + pseudo + ' a rejoint le Chat ! </em></p>')
         })
 
+        socket.on('clientLeft', function(pseudo) {
+            $('#chat').prepend('<p><em>' + pseudo + ' s\'est déconnecté. </em></p>')
+        })
+
         $('#messageForm').submit(function() {
             var message = $('#message').val()
-            socket.emit('message', message)
-            insertMessage(pseudo, message)
+            socket.emit('message', message, function(consoleMessage) {
+                $('#chat').prepend('<p><span style="background-color: red; color: white">' + consoleMessage + '</span></p>')
+            })
+            if(message.substr(0,3) === "/w ") {
+                message = message.substr(3)
+                insertWhisper(pseudo, message)
+            } else {  
+                insertMessage(pseudo, message)
+            }
             $('#message').val('').focus()
             return false
         })
 
         function insertMessage(pseudo, message) {
             $('#chat').prepend('<p><strong style="color: white; background-color: black; padding: 2px">' + pseudo + '</strong>' + message + '</p>')
+        }
+        function insertWhisper(pseudo, message) {
+            $('#chat').prepend('<p style="font-style: italic"><strong style="color: white; background-color: gray; padding: 2px;">' + pseudo + '</strong>' + message + '</p>')
         }
     </script>
 </body>
