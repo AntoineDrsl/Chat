@@ -4,18 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SuperChat</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 </head>
 <body>
-    <h1>Super Chat</h1>
+    
+    <div class="container">
+        <h1 class="mt-3 mb-5">Super Chat</h1>
 
-    <form action="/" method="POST" id="messageForm">
-        <input type="text" name="message" id="message" placeholder="Votre message..." size="50" autofocus>
-        <input type="submit" id="sendMessage" value="Envoyer">
-    </form>
+        <div class="row">
+            <div class="col-mb-5">
+                <form action="/" method="POST" id="messageForm">
+                    <input type="text" name="message" id="message" placeholder="Votre message..." size="50" autofocus>
+                    <input type="submit" id="sendMessage" value="Envoyer">
+                </form>
+                <section id="chat">
 
-    <section id="chat">
+                </section>
+            </div>
 
-    </section>
+            <div class="col-mb-5 offset-md-2">
+                <h3>Utilisateurs connectés</h3>
+                <ul>
+                </ul>
+            </div>
+
+        </div>
+    </div>
 
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -52,19 +66,30 @@
             })
             if(message.substr(0,3) === "/w ") {
                 message = message.substr(3)
-                insertWhisper(pseudo, message)
+                var space = message.indexOf(' ')
+                if(space != -1) {
+                    var toPseudo = message.substr(0, space)
+                    message = message.substr(space)     
+                    insertYourWhisper(toPseudo, message)
+                }
             } else {  
-                insertMessage(pseudo, message)
+                insertYourMessage(message)
             }
             $('#message').val('').focus()
             return false
         })
 
         function insertMessage(pseudo, message) {
-            $('#chat').prepend('<p><strong style="color: white; background-color: black; padding: 2px">' + pseudo + '</strong>' + message + '</p>')
+            $('#chat').prepend('<p><strong style="color: white; background-color: black; padding: 2px">' + pseudo + '</strong> ' + message + '</p>')
+        }
+        function insertYourMessage(message) {
+            $('#chat').prepend('<p><strong style="color: white; background-color: blue; padding: 2px">You</strong> ' + message + '</p>')
         }
         function insertWhisper(pseudo, message) {
-            $('#chat').prepend('<p style="font-style: italic"><strong style="color: white; background-color: gray; padding: 2px;">' + pseudo + '</strong>' + message + '</p>')
+            $('#chat').prepend('<p style="font-style: italic"><strong style="color: white; background-color: gray; padding: 2px;">' + pseudo + '</strong> ' + message + '</p>')
+        }
+        function insertYourWhisper(toPseudo, message) {
+            $('#chat').prepend('<p style="font-style: italic"><strong style="color: white; background-color: blue; padding: 2px;">A ' + toPseudo + '</strong> ' + message + '</p>')
         }
     </script>
 </body>

@@ -5,7 +5,9 @@ var ent = require('ent') //bloque les caractères HTML
 var users = {};
 
 app.get('/', function(req, res) {
-    res.render('index.ejs')
+    res.render('index.ejs', {
+        'users': users
+    })
 })
 
 io.sockets.on('connection', function(socket) {
