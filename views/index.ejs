@@ -24,7 +24,10 @@
 
             <div class="col-mb-5 offset-md-2">
                 <h3>Utilisateurs connectés</h3>
-                <ul>
+                <ul id="usersList">
+                    <% users.forEach(user => { %>
+                    <li id="<%= user %>"> <%= user %></li>
+                    <% }); %>
                 </ul>
             </div>
 
@@ -41,6 +44,7 @@
             var pseudo = prompt('Quel est votre pseudo ?')
         }
         socket.emit('newClient', pseudo)
+        $('#usersList').prepend('<li>' + pseudo + '</li>')
         document.title = pseudo + ' - ' + document.title
 
         socket.on('message', function(data) {
@@ -53,10 +57,12 @@
 
         socket.on('newClient', function(pseudo) {
             $('#chat').prepend('<p><em>' + pseudo + ' a rejoint le Chat ! </em></p>')
+            $('#usersList').prepend('<li id="' + pseudo + '">' + pseudo + '</li>')
         })
 
         socket.on('clientLeft', function(pseudo) {
             $('#chat').prepend('<p><em>' + pseudo + ' s\'est déconnecté. </em></p>')
+            $('#' + pseudo).remove()
         })
 
         $('#messageForm').submit(function() {

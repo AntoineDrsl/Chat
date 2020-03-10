@@ -2,11 +2,22 @@ var app = require('express')()
 var server = require('http').createServer(app)
 var io = require('socket.io').listen(server)
 var ent = require('ent') //bloque les caractères HTML
+var mongoose = require('mongoose')
+
 var users = {};
+var connectedUsers = [];
+
+mongoose.connect('mongodb://localhost/SuperChat', { useNewUrlParser: true, useUnifiedTopology: true }, function(err){
+if(err) {
+    console.log(err)
+} else {
+    console.log('Connected to mongodb')
+}
+})
 
 app.get('/', function(req, res) {
     res.render('index.ejs', {
-        'users': users
+        'users': connectedUsers
     })
 })
 
@@ -15,6 +26,7 @@ io.sockets.on('connection', function(socket) {
     socket.on('newClient', function(pseudo) {
         pseudo = ent.encode(pseudo)
         socket.pseudo = pseudo
+        connectedUsers.push(socket.pseudo)
         users[socket.pseudo] = socket
         socket.broadcast.emit('newClient', pseudo)
     })
@@ -42,6 +54,10 @@ io.sockets.on('connection', function(socket) {
     
     socket.on('disconnect', function() {
         socket.broadcast.emit('clientLeft', socket.pseudo)
+        var index = connectedUsers.indexOf(socket.pseudo)
+        if(index > -1) {
+            connectedUsers.splice(index, 1)
+        }
         delete users[socket.pseudo]
     })
 
