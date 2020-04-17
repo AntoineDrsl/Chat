@@ -113,8 +113,8 @@ io.on('connection', (socket) => {
             //Si il existe, on connecte le user en mettant son pseudo dans les cookies
             if(user) {
 
-                // On join automatiquement le channel "all" par défaut
-                _joinRoom("all");
+                // On join automatiquement le channel "salon1" par défaut
+                _joinRoom("salon1");
 
                 
                 // On conserve le pseudo dans la variable socket qui est propre à chaque utilisateur
@@ -138,8 +138,8 @@ io.on('connection', (socket) => {
                 user.pseudo = pseudo;
                 user.save();
 
-                // On join automatiquement le channel "all" par défaut
-                _joinRoom("all");
+                // On join automatiquement le channel "salon1" par défaut
+                _joinRoom("salon1");
 
 
                 socket.pseudo = pseudo;

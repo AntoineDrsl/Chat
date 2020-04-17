@@ -19,11 +19,11 @@
         <div class="container">
             <div class="channelList">
                 <h1>Liste des channels</h1>
-                <ul>
+                <ul id="roomList">
                     <% channels.forEach(channel => { %>
                     <li onclick="_joinRoom('<%=channel.name%>')" class="elementList"><%= channel.name %></li>
                     <% }); %>
-                    <li onclick="_createRoom()" class="elementList">Creer une nouvelle room</li>
+                    <li onclick="_createRoom()" class="elementList" id="createNewRoom">Creer une nouvelle room</li>
                 </ul>
             </div>
     
