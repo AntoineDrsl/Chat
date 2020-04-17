@@ -1,0 +1,164 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.main{
+    width: 100%;
+    height: 100vh;
+    background-color: rgba(48, 44, 44);
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    /* padding-left: 10%; */
+}
+
+.main > form {
+    position: absolute;
+    bottom: 2%;
+    width: 100%;
+    margin-left: 20%;
+}
+.msgContainer{
+    width: 75%;
+}
+.chatTitle{
+    display: flex;
+    justify-content: center;
+}
+
+.chatTitle h1{
+    margin: 25px 0 50px 0;
+    color: white;
+    margin-right: 10px;
+}
+
+.typing{
+    position: relative;
+}
+.typing::after{
+    content: "";
+    position: absolute;
+    width: 1px;
+    right: -5px;
+    height: 100%;
+    border-right: 2px solid white;
+    animation: blink 0.5s infinite ease;
+}
+
+@keyframes blink{
+    0%{
+        opacity: 0;
+    }
+    100%{
+        opacity: 1;
+    }
+}
+
+form > input[type="text"]{
+    display: inline-block;
+    width: 50%;
+    height: 35px;
+    border: none;
+}
+form > input[type="submit"]{
+    padding: 9px;
+    border: none;
+
+}
+
+.newUser{
+    color: white;
+    font-style: italic;
+}
+.quitUser{
+    color: white;
+    font-style: italic;
+}
+#isWritting{
+    color: white;
+    font-style: italic;
+}
+
+.newMessage{
+    
+    background-color: rgb(77, 155, 243);
+    border: none;
+    border-radius: 10px  0 0 10px;
+    font-size: 20px;
+    padding: 10px;
+    margin-left: 55%;
+    margin-top: 2%;
+    
+}
+
+.newMessageAll{
+    
+    background-color: rgb(204, 211, 211);
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    padding: 5px;
+    max-width: 50%;
+    margin-top: 2%;
+
+}
+
+.whisper{
+    background-color: rgb(235, 14, 14);
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    padding: 5px;
+    max-width: 50%;
+    margin-top: 2%;
+}
+
+.oldMessages{
+    background-color: rgb(204, 211, 211);
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    padding: 5px;
+    max-width: 50%;
+    margin-top: 2%;
+}
+.oldWhispers{
+    background-color: rgb(235, 14, 14);
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    padding: 5px;
+    max-width: 50%;
+    margin-top: 2%;
+}
+
+.container{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.channelList{
+    color:white;
+    width: 25%;
+}
+
+.elementList {
+    /* display: block; */
+    width: 60%;
+    background-color: rgb(131, 131, 131);
+    padding: 20px;
+    transition: 0.5s;
+    cursor: pointer;
+}
+
+
+.elementList:hover {
+    
+    background-color: rgb(105, 105, 105);
+    transition: 0.5s;
+    cursor: pointer;
+}

@@ -1,0 +1,223 @@
+// On connecte le fichier au serveur
+var socket = io.connect('http://localhost:8080');
+
+// while(!channel) {
+//     var channel = prompt('Tu veux rejoindre quel channel ?');
+// }
+// socket.emit('channel', channel);
+
+
+
+// On demande le pseudo de la personne
+while(!pseudo) {
+    var pseudo = prompt('quel est ton nom ?');
+}
+
+socket.emit('pseudo', pseudo);
+document.title = pseudo + ' - ' + document.title;
+
+
+
+// On attends l'emission 'newUser' du serveur, si il est reçu on ajoute un message 
+// contenant les informations emises par le serveur, et ajoutant le user à la liste des users
+socket.on('newUser', (pseudo) => {
+    createElementFunction('newUser', pseudo);
+});
+socket.on('newUserInDb', (pseudo) => {
+    newOption = document.createElement('option');
+    newOption.textContent = pseudo;
+    newOption.value = pseudo;
+    document.getElementById('receiverInput').appendChild(newOption);
+})
+
+// On check si le user se déconnecte
+socket.on('quitUser', (message) => {
+    createElementFunction('quitUser', message);
+});
+
+// On attend un nouveau message
+socket.on('newMessageAll', (content) => {
+
+    createElementFunction('newMessageAll', content);
+
+});
+
+// On attend un message privé
+socket.on('whisper', (content) => {
+
+    createElementFunction('whisper', content);
+
+})
+
+// Une personne est en train d'ecrire
+socket.on('writting', (pseudo) => {
+    document.getElementById('isWritting').textContent = pseudo + ' est en train d\'ecrire';
+});
+
+// Elle a arrêté d'ecrire
+socket.on('notWritting', (pseudo) => {
+    document.getElementById('isWritting').textContent = '';
+});
+
+
+socket.on('oldMessages', (messages) => {
+    messages.forEach(message => {
+        createElementFunction('oldMessages', {sender: message.sender, content: message.content});
+    });
+    console.log(document.getElementsByClassName('message'));
+});
+
+
+socket.on('oldWhispers', (whispers) => {
+    whispers.forEach(whisper => {
+        createElementFunction('oldWhispers', {sender: whisper.sender, content: whisper.content});
+    });
+})
+
+
+
+// Quand on soumet le formulaire
+document.getElementById('chatForm').addEventListener('submit', (e)=>{
+
+    e.preventDefault();
+
+    // On récupère la valeur dans l'input et on met le input a 0
+    const textInput = document.getElementById('msgInput').value;
+    document.getElementById('msgInput').value = '';
+
+    // On récupère le destinataire du message
+    const receiver = document.getElementById('receiverInput').value;
+
+    // Si la valeur > 0, on envoie un message au serveur contenant la valeur de l'input 
+    if(textInput.length > 0) {
+
+        socket.emit('newMessage', textInput, receiver);
+
+        if(receiver === "all") {
+            createElementFunction('newMessage', textInput);
+        }
+
+    }
+    else {
+        return false;
+    }
+
+});
+
+// S'il ecrit on emet 'writting' au serveur
+function writting() {
+    socket.emit('writting', pseudo);
+}
+
+// S'il ecrit plus on emet 'notWritting' au serveur
+function notWritting() {
+    socket.emit('notWritting', pseudo);
+}
+
+
+
+function createElementFunction(element, content) {
+    
+    const newElement = document.createElement("div");
+
+    switch(element){
+
+        case 'newMessage':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = pseudo + ': ' + content;
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+            
+            
+        case 'newMessageAll':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = content.pseudo + ': ' + content.message;
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+
+        case 'whisper':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = content.sender + ' vous chuchote: ' + content.message;
+            newElement.id = 'message';
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+
+        case 'newUser':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = content + ' à rejoint le chat';
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+
+        case 'quitUser':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = content + ' à quitter le chat';
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+
+        case 'oldMessages':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = content.sender + ': ' + content.content;
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+
+        case 'oldWhispers':
+            newElement.classList.add(element, 'message');
+            newElement.textContent = content.sender + ' vous chuchote : ' + content.content;
+            document.getElementById('msgContainer').appendChild(newElement);
+            break;
+
+    }
+}
+
+
+function _joinRoom(channel){
+
+    // let messages = document.getElementsByClassName('message');
+
+    
+    // for(let i = 0; i<= messages.length; i++){
+    //     document.getElementById('msgContainer').parentElement.removeChild(messages[i]);
+    // }
+
+    document.getElementById('msgContainer').innerHTML = "";
+
+    socket.emit('changeChannel', channel);
+
+    
+}
+
+
+function _createRoom(){
+    while(!newRoom){
+        var newRoom = prompt('Quel est le nom de la nouvelle Room');
+    }
+
+    _joinRoom(newRoom);
+    window.location.reload();
+}
+
+
+
+//Text typping effect
+const texts = ['ce chat !', 'cette messagerie !', 'ce site !'];
+let count = 0;
+let index = 0;
+let currentText = '';
+let letter = '';
+
+(function type() {
+
+    if(count === texts.length) {
+        count = 0;
+    }
+    currentText = texts[count];
+    letter = currentText.slice(0, ++index);
+
+    document.querySelector('.typing').textContent = letter;
+    if(letter.length === currentText.length) {
+        count++;
+        index = 0;
+    }
+    setTimeout(type, 1000);
+
+}());

@@ -3,100 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SuperChat</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="pin-login.css">
+    <title>Se connecter</title>
 </head>
+
+
 <body>
-    
-    <div class="container">
-        <h1 class="mt-3 mb-5">Super Chat</h1>
+    <h1>Connectez-vous au chat !</h1>
 
-        <div class="row">
-            <div class="col-mb-5">
-                <form action="/" method="POST" id="messageForm">
-                    <input type="text" name="message" id="message" placeholder="Votre message..." size="50" autofocus>
-                    <input type="submit" id="sendMessage" value="Envoyer">
-                </form>
-                <section id="chat">
-
-                </section>
-            </div>
-
-            <div class="col-mb-5 offset-md-2">
-                <h3>Utilisateurs connectés</h3>
-                <ul id="usersList">
-                    <% users.forEach(user => { %>
-                    <li id="<%= user %>"> <%= user %></li>
-                    <% }); %>
-                </ul>
-            </div>
-
+    <div class="pin-login" id="mainPinLogin">
+        <input type="password" readonly class="pin-login__text">
+        <div class="pin-login__numpad">
+            
         </div>
     </div>
 
-    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="pin-login.js"></script>
     <script>
 
-        var socket = io.connect('http://localhost:8080')
+        // On créer un nouvel objet PinLogin
+        new PinLogin({
 
-        while(!pseudo) {
-            var pseudo = prompt('Quel est votre pseudo ?')
-        }
-        socket.emit('newClient', pseudo)
-        $('#usersList').prepend('<li>' + pseudo + '</li>')
-        document.title = pseudo + ' - ' + document.title
+            // El vaut la div mainPinLogin
+            el: document.getElementById("mainPinLogin"),
 
-        socket.on('message', function(data) {
-            insertMessage(data.pseudo, data.message)
-        })
+            // On défini le fichier test pour le code
+            loginEndPoint: "http://localhost:8080/login",
 
-        socket.on('whisper', function(data) {
-            insertWhisper(data.pseudo, data.message)
-        })
+            // On défini la page de redirection
+            redirectTo: "http://localhost:8080/chat",
+            
+            // On défini le nombre de chiffre maximum utilisable pour le code
+            maxNumbers: 4
+        });
 
-        socket.on('newClient', function(pseudo) {
-            $('#chat').prepend('<p><em>' + pseudo + ' a rejoint le Chat ! </em></p>')
-            $('#usersList').prepend('<li id="' + pseudo + '">' + pseudo + '</li>')
-        })
-
-        socket.on('clientLeft', function(pseudo) {
-            $('#chat').prepend('<p><em>' + pseudo + ' s\'est déconnecté. </em></p>')
-            $('#' + pseudo).remove()
-        })
-
-        $('#messageForm').submit(function() {
-            var message = $('#message').val()
-            socket.emit('message', message, function(consoleMessage) {
-                $('#chat').prepend('<p><span style="background-color: red; color: white">' + consoleMessage + '</span></p>')
-            })
-            if(message.substr(0,3) === "/w ") {
-                message = message.substr(3)
-                var space = message.indexOf(' ')
-                if(space != -1) {
-                    var toPseudo = message.substr(0, space)
-                    message = message.substr(space)     
-                    insertYourWhisper(toPseudo, message)
-                }
-            } else {  
-                insertYourMessage(message)
-            }
-            $('#message').val('').focus()
-            return false
-        })
-
-        function insertMessage(pseudo, message) {
-            $('#chat').prepend('<p><strong style="color: white; background-color: black; padding: 2px">' + pseudo + '</strong> ' + message + '</p>')
-        }
-        function insertYourMessage(message) {
-            $('#chat').prepend('<p><strong style="color: white; background-color: blue; padding: 2px">You</strong> ' + message + '</p>')
-        }
-        function insertWhisper(pseudo, message) {
-            $('#chat').prepend('<p style="font-style: italic"><strong style="color: white; background-color: gray; padding: 2px;">' + pseudo + '</strong> ' + message + '</p>')
-        }
-        function insertYourWhisper(toPseudo, message) {
-            $('#chat').prepend('<p style="font-style: italic"><strong style="color: white; background-color: blue; padding: 2px;">A ' + toPseudo + '</strong> ' + message + '</p>')
-        }
     </script>
 </body>
 </html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="chat.css">
+    <title>Chat</title>
+</head>
+<body>
+
+    <div class="main">
+        <div class="chatTitle">
+            <h1>Bienvenue sur </h1>
+            <h1 class="typing">coucou</h1>
+        </div>
+
+
+        <div class="container">
+            <div class="channelList">
+                <h1>Liste des channels</h1>
+                <ul>
+                    <% channels.forEach(channel => { %>
+                    <li onclick="_joinRoom('<%=channel.name%>')" class="elementList"><%= channel.name %></li>
+                    <% }); %>
+                    <li onclick="_createRoom()" class="elementList">Creer une nouvelle room</li>
+                </ul>
+            </div>
+    
+            <div class="msgContainer" id="msgContainer"></div>
+        </div>
+        
+        <div id="isWritting"></div>
+        <form action="/chat" method="POST" id="chatForm">
+            <input type="text" id="msgInput" onkeypress="writting()" onblur="notWritting()" autofocus>
+            <select name="receiver" id="receiverInput">
+                <option value="all">A tous</option>
+                <% users.forEach(user => { %>
+                    <option value="<%= user.pseudo %>"><%= user.pseudo %></option>
+                <% }); %>
+            </select>
+            <input type="submit" id="btnSend" value="Envoyer">
+        </form>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="chat.js"></script>
+</body>
+</html>

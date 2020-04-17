@@ -1,9 +1,7 @@
 const mongoose = require('mongoose')
 
-var chatSchema = new mongoose.Schema({
-    pseudo: String,
-    message: String,
-    created_at: {type: Date, default: Date.now}
+var userSchema = new mongoose.Schema({
+    pseudo: String
 });
 
-mongoose.model('message', chatSchema)
+mongoose.model('user', userSchema)
