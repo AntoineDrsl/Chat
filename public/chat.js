@@ -47,7 +47,7 @@ socket.on('whisper', (content) => {
 
     createElementFunction('whisper', content);
 
-})
+});
 
 // Une personne est en train d'ecrire
 socket.on('writting', (pseudo) => {
@@ -64,16 +64,19 @@ socket.on('oldMessages', (messages) => {
     messages.forEach(message => {
         createElementFunction('oldMessages', {sender: message.sender, content: message.content});
     });
-    console.log(document.getElementsByClassName('message'));
 });
-
+socket.on('emitChannel', (channel) => {
+    if(channel.previousChannel) {    
+        document.getElementById(channel.previousChannel).classList.remove('inChannel')
+    }
+    document.getElementById(channel.newChannel).classList.add('inChannel')
+})
 
 socket.on('oldWhispers', (whispers) => {
     whispers.forEach(whisper => {
         createElementFunction('oldWhispers', {sender: whisper.sender, content: whisper.content});
     });
-})
-
+});
 
 
 // Quand on soumet le formulaire
@@ -124,14 +127,16 @@ function createElementFunction(element, content) {
 
         case 'newMessage':
             newElement.classList.add(element, 'message');
-            newElement.textContent = pseudo + ': ' + content;
+            newElement.innerHTML = pseudo + ': ' + content;
+            newElement.id = 'newMessage';
             document.getElementById('msgContainer').appendChild(newElement);
             break;
             
             
         case 'newMessageAll':
             newElement.classList.add(element, 'message');
-            newElement.textContent = content.pseudo + ': ' + content.message;
+            newElement.id = content.id;
+            newElement.innerHTML = content.pseudo + ': ' + content.message;
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 
@@ -156,13 +161,14 @@ function createElementFunction(element, content) {
 
         case 'oldMessages':
             newElement.classList.add(element, 'message');
-            newElement.textContent = content.sender + ': ' + content.content;
+            newElement.innerHTML = content.sender + ': ' + content.content;
+            newElement.id = content.id;
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 
         case 'oldWhispers':
             newElement.classList.add(element, 'message');
-            newElement.textContent = content.sender + ' vous chuchote : ' + content.content;
+            newElement.innerHTML = content.sender + ' vous chuchote : ' + content.content;
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 
@@ -171,7 +177,7 @@ function createElementFunction(element, content) {
 
 
 function _joinRoom(channel){
-
+  
     // On réinitialise les messages
     document.getElementById('msgContainer').innerHTML = "";
 
@@ -184,40 +190,16 @@ function _joinRoom(channel){
 
 function _createRoom(){
     while(!newRoom){
-        var newRoom = prompt('Quel est le nom de la nouvelle Room');
+        var newRoom = prompt('Quel est le nom de la nouvelle Room ?');
     }
-
-    _joinRoom(newRoom);
-
+    
     const newRoomItem = document.createElement("li");
     newRoomItem.classList.add('elementList');
+    newRoomItem.id = newRoom;
     newRoomItem.textContent = newRoom;
     newRoomItem.setAttribute('onclick', "_joinRoom('" + newRoom + "')")
     document.getElementById('roomList').insertBefore(newRoomItem, document.getElementById('createNewRoom'));
+
+    _joinRoom(newRoom);
+
 }
-
-
-
-//Text typping effect
-const texts = ['ce chat !', 'cette messagerie !', 'ce site !'];
-let count = 0;
-let index = 0;
-let currentText = '';
-let letter = '';
-
-(function type() {
-
-    if(count === texts.length) {
-        count = 0;
-    }
-    currentText = texts[count];
-    letter = currentText.slice(0, ++index);
-
-    document.querySelector('.typing').textContent = letter;
-    if(letter.length === currentText.length) {
-        count++;
-        index = 0;
-    }
-    setTimeout(type, 1000);
-
-}());

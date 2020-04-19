@@ -4,41 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link rel="stylesheet" href="pin-login.css">
-    <title>Se connecter</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="chat.css">
+    <title>Chat</title>
 </head>
-
-
 <body>
-    <h1>Connectez-vous au chat !</h1>
 
-    <div class="pin-login" id="mainPinLogin">
-        <input type="password" readonly class="pin-login__text">
-        <div class="pin-login__numpad">
-            
+    <div class="app">
+        <div class="chatTitle">
+            <h1>Bienvenue sur chat</h1>
         </div>
+
+
+        <div class="container">
+            <div class="channelList">
+                <h1>Liste des channels</h1>
+                <ul id="roomList">
+                    <% channels.forEach(channel => { %>
+                    <li onclick="_joinRoom('<%=channel.name%>')" class="elementList" id="<%=channel.name%>"><%= channel.name %></li>
+                    <% }); %>
+                    <li onclick="_createRoom()" class="elementList" id="createNewRoom">Creer une nouvelle room</li>
+                </ul>
+            </div>
+    
+            <div class="msgContainer" id="msgContainer"></div>
+        </div>
+        
+        <div id="isWritting"></div>
+        <form action="/chat" method="POST" id="chatForm">
+            <input type="text" id="msgInput" onkeypress="writting()" onblur="notWritting()" autofocus>
+            <select name="receiver" id="receiverInput">
+                <option value="all">A tous</option>
+                <% users.forEach(user => { %>
+                    <option value="<%= user.pseudo %>"><%= user.pseudo %></option>
+                <% }); %>
+            </select>
+            <input type="submit" id="btnSend" value="Envoyer">
+        </form>
+
     </div>
 
-
-    <script src="pin-login.js"></script>
-    <script>
-
-        // On créer un nouvel objet PinLogin
-        new PinLogin({
-
-            // El vaut la div mainPinLogin
-            el: document.getElementById("mainPinLogin"),
-
-            // On défini le fichier test pour le code
-            loginEndPoint: "http://localhost:8080/login",
-
-            // On défini la page de redirection
-            redirectTo: "http://localhost:8080/chat",
-            
-            // On défini le nombre de chiffre maximum utilisable pour le code
-            maxNumbers: 4
-        });
-
-    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="chat.js"></script>
 </body>
 </html>
