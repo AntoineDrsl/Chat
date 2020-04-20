@@ -9,8 +9,10 @@ var cors = require('cors');
 const cookieParser = require('cookie-parser');
 var mongoose = require('mongoose');
 
-//On se conencte à la base de données
-mongoose.connect('mongodb://localhost/RenforcementJS', { useNewUrlParser: true, useUnifiedTopology: true }, function(err){
+const ObjectId = mongoose.Types.ObjectId;
+
+//On se connecte à la base de données
+mongoose.connect('mongodb://localhost/Chat', { useNewUrlParser: true, useUnifiedTopology: true }, function(err){
 if(err) {
     console.log(err)
 } else {
@@ -35,58 +37,31 @@ app.use(cors());
 //On définit le dossier contenant notre CSS et JS
 app.use(express.static(__dirname + '/public'));
 
-
-
-// ÉCOUTE DES ROUTES
-
-//POST
-//On écoute l'URL '/login'. Si on y reçoit un post, on lance la fonction
-app.post('/login', (req, res, next) => {
-
-    //Si le pincode (contenu dans le body) est '1234' on retourne le status 200 (ok)
-    if (req.body.pincode == "1234") {
-        res.cookie('statusCode', 200);
-        return res.status(200).json({ status: true });
-        
-        //Sinon, on retourne le status 402 (pas ok)
-    } else {
-        return res.status(402).json({ status: false });
-    }
-})
-
-//GET
+//ROUTER
 app.get('/', function(req, res) {
-    res.render('index.ejs');
-});
-app.get('/chat', function(req, res) {
-    if( req.cookies.statusCode === '200'){
-        User.find((err, users) => {
-            if(users) { 
-                Room.find((err, channels) => {
-                    if(channels){
-                        res.render('chat.ejs', {users: users, channels: channels});
-                    }
-                    else {
+    User.find((err, users) => {
+        if(users) { 
+            Room.find((err, channels) => {
+                if(channels){
+                    res.render('index.ejs', {users: users, channels: channels});
+                }
+                else {
 
-                        res.render('chat.ejs', {users: users});
-                    }
-                });
-            } else {
-                Room.find((err, channels) => {
-                    if(channels){
-                        res.render('chat.ejs', {channels: channels});
-                    }
-                    else {
+                    res.render('index.ejs', {users: users});
+                }
+            });
+        } else {
+            Room.find((err, channels) => {
+                if(channels){
+                    res.render('index.ejs', {channels: channels});
+                }
+                else {
 
-                        res.render('chat.ejs');
-                    }
-                });
-            }
-        });
-    }
-    else{
-        res.render('402.ejs');
-    }
+                    res.render('index.ejs');
+                }
+            });
+        }
+    });
 });
 
 //404
@@ -103,7 +78,7 @@ app.use(function(req, res, next) {
 var io = require('socket.io').listen(server);
 var connectedUsers = []
 
-// Lorsqu'une personne arrive sur le fichier chat.html, la fonction ci-dessous se lance
+// Lorsqu'une personne arrive sur la vue index.ejs, la fonction ci-dessous se lance
 io.on('connection', (socket) => {
     
     // On recoit 'pseudo' du fichier html
@@ -116,7 +91,6 @@ io.on('connection', (socket) => {
                 // On join automatiquement le channel "salon1" par défaut
                 _joinRoom("salon1");
 
-                
                 // On conserve le pseudo dans la variable socket qui est propre à chaque utilisateur
                 socket.pseudo = pseudo;
                 connectedUsers.push(socket);
@@ -141,7 +115,6 @@ io.on('connection', (socket) => {
                 // On join automatiquement le channel "salon1" par défaut
                 _joinRoom("salon1");
 
-
                 socket.pseudo = pseudo;
                 connectedUsers.push(socket)
                 socket.broadcast.to(socket.channel).emit('newUser', pseudo);
@@ -154,7 +127,13 @@ io.on('connection', (socket) => {
 
     function _joinRoom(channelParam) {
 
-        
+        //Si l'utilisateur est déjà dans un channel, on le stock
+        var previousChannel = ''
+        if(socket.channel) {
+            previousChannel = socket.channel; 
+        }
+
+        //On quitte tous les channels et on rejoint le channel ciblé
         socket.leaveAll();
         socket.join(channelParam);
         socket.channel = channelParam;
@@ -167,6 +146,12 @@ io.on('connection', (socket) => {
                     }
                     else{
                         socket.emit('oldMessages', messages);
+                        //Si l'utilisateur vient d'un autre channel, on le fait passer, sinon on ne fait passer que le nouveau
+                        if(previousChannel) {
+                            socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
+                        } else {
+                            socket.emit('emitChannel', {newChannel: socket.channel});
+                        }
                     }
                 });
             }
@@ -176,7 +161,7 @@ io.on('connection', (socket) => {
                 room.name = socket.channel;
                 room.save();
         
-                return true;
+                socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
             }
         })
     }
@@ -194,9 +179,9 @@ io.on('connection', (socket) => {
             chat.sender = socket.pseudo;
             chat.receiver = receiver;
             chat.content = message;
-            chat.save();  
+            chat.save();
 
-            socket.broadcast.to(socket.channel).emit('newMessageAll', {message: message, pseudo: socket.pseudo});
+            socket.broadcast.to(socket.channel).emit('newMessageAll', {message: message, pseudo: socket.pseudo, id: chat._id});
 
         } else {
 
@@ -241,9 +226,7 @@ io.on('connection', (socket) => {
         socket.broadcast.to(socket.channel).emit('notWritting', pseudo);
     });
 
-
 });
-
 
 
 //On dit à Node de se lancer sur le port 8080
