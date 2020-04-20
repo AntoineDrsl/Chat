@@ -70,7 +70,10 @@ socket.on('emitChannel', (channel) => {
         document.getElementById(channel.previousChannel).classList.remove('inChannel')
     }
     document.getElementById(channel.newChannel).classList.add('inChannel')
-})
+});
+socket.on('newChannel', (newChannel) => {
+    createChannel(newChannel)
+});
 
 socket.on('oldWhispers', (whispers) => {
     whispers.forEach(whisper => {
@@ -175,6 +178,17 @@ function createElementFunction(element, content) {
     }
 }
 
+function createChannel(newRoom) {
+
+    const newRoomItem = document.createElement("li");
+    newRoomItem.classList.add('elementList');
+    newRoomItem.id = newRoom;
+    newRoomItem.textContent = newRoom;
+    newRoomItem.setAttribute('onclick', "_joinRoom('" + newRoom + "')")
+    document.getElementById('roomList').insertBefore(newRoomItem, document.getElementById('createNewRoom'));
+
+}
+
 
 function _joinRoom(channel){
   
@@ -193,12 +207,7 @@ function _createRoom(){
         var newRoom = prompt('Quel est le nom de la nouvelle Room ?');
     }
     
-    const newRoomItem = document.createElement("li");
-    newRoomItem.classList.add('elementList');
-    newRoomItem.id = newRoom;
-    newRoomItem.textContent = newRoom;
-    newRoomItem.setAttribute('onclick', "_joinRoom('" + newRoom + "')")
-    document.getElementById('roomList').insertBefore(newRoomItem, document.getElementById('createNewRoom'));
+    createChannel(newRoom);
 
     _joinRoom(newRoom);
 

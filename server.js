@@ -168,6 +168,7 @@ io.on('connection', (socket) => {
 
     socket.on('changeChannel', (channel) => {
         _joinRoom(channel);
+        socket.broadcast.emit('newChannel', channel);
     });
 
     // Quand un nouveau message est envoyé
