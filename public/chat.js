@@ -60,9 +60,13 @@ socket.on('notWritting', (pseudo) => {
 });
 
 
-socket.on('oldMessages', (messages) => {
+socket.on('oldMessages', (messages, user) => {
     messages.forEach(message => {
-        createElementFunction('oldMessages', {sender: message.sender, content: message.content});
+        if(message.sender === user) {
+            createElementFunction('oldMessagesMe', {sender: message.sender, content: message.content});
+        } else {
+            createElementFunction('oldMessages', {sender: message.sender, content: message.content});
+        }
     });
 });
 socket.on('emitChannel', (channel) => {
@@ -131,14 +135,12 @@ function createElementFunction(element, content) {
         case 'newMessage':
             newElement.classList.add(element, 'message');
             newElement.innerHTML = pseudo + ': ' + content;
-            newElement.id = 'newMessage';
             document.getElementById('msgContainer').appendChild(newElement);
             break;
             
             
         case 'newMessageAll':
             newElement.classList.add(element, 'message');
-            newElement.id = content.id;
             newElement.innerHTML = content.pseudo + ': ' + content.message;
             document.getElementById('msgContainer').appendChild(newElement);
             break;
@@ -146,7 +148,6 @@ function createElementFunction(element, content) {
         case 'whisper':
             newElement.classList.add(element, 'message');
             newElement.textContent = content.sender + ' vous chuchote: ' + content.message;
-            newElement.id = 'message';
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 
@@ -165,9 +166,14 @@ function createElementFunction(element, content) {
         case 'oldMessages':
             newElement.classList.add(element, 'message');
             newElement.innerHTML = content.sender + ': ' + content.content;
-            newElement.id = content.id;
             document.getElementById('msgContainer').appendChild(newElement);
             break;
+
+        case 'oldMessagesMe':
+            newElement.classList.add('newMessage', 'message');
+            newElement.innerHTML = content.sender + ': ' + content.content;
+            document.getElementById('msgContainer').appendChild(newElement);
+        break;
 
         case 'oldWhispers':
             newElement.classList.add(element, 'message');

@@ -145,7 +145,7 @@ io.on('connection', (socket) => {
                         return false;
                     }
                     else{
-                        socket.emit('oldMessages', messages);
+                        socket.emit('oldMessages', messages, socket.pseudo);
                         //Si l'utilisateur vient d'un autre channel, on le fait passer, sinon on ne fait passer que le nouveau
                         if(previousChannel) {
                             socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
@@ -160,7 +160,8 @@ io.on('connection', (socket) => {
                 var room = new Room();
                 room.name = socket.channel;
                 room.save();
-        
+                
+                socket.broadcast.emit('newChannel', socket.channel);
                 socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
             }
         })
@@ -168,7 +169,6 @@ io.on('connection', (socket) => {
 
     socket.on('changeChannel', (channel) => {
         _joinRoom(channel);
-        socket.broadcast.emit('newChannel', channel);
     });
 
     // Quand un nouveau message est envoyé
