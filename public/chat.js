@@ -1,89 +1,14 @@
 // On connecte le fichier au serveur
 var socket = io.connect('http://localhost:8080');
 
-// while(!channel) {
-//     var channel = prompt('Tu veux rejoindre quel channel ?');
-// }
-// socket.emit('channel', channel);
-
-
 
 // On demande le pseudo de la personne
 while(!pseudo) {
     var pseudo = prompt('quel est ton nom ?');
 }
-
 socket.emit('pseudo', pseudo);
+socket.emit('oldWhispers', pseudo);
 document.title = pseudo + ' - ' + document.title;
-
-
-
-// On attends l'emission 'newUser' du serveur, si il est reçu on ajoute un message 
-// contenant les informations emises par le serveur, et ajoutant le user à la liste des users
-socket.on('newUser', (pseudo) => {
-    createElementFunction('newUser', pseudo);
-});
-socket.on('newUserInDb', (pseudo) => {
-    newOption = document.createElement('option');
-    newOption.textContent = pseudo;
-    newOption.value = pseudo;
-    document.getElementById('receiverInput').appendChild(newOption);
-})
-
-// On check si le user se déconnecte
-socket.on('quitUser', (message) => {
-    createElementFunction('quitUser', message);
-});
-
-// On attend un nouveau message
-socket.on('newMessageAll', (content) => {
-
-    createElementFunction('newMessageAll', content);
-
-});
-
-// On attend un message privé
-socket.on('whisper', (content) => {
-
-    createElementFunction('whisper', content);
-
-});
-
-// Une personne est en train d'ecrire
-socket.on('writting', (pseudo) => {
-    document.getElementById('isWritting').textContent = pseudo + ' est en train d\'ecrire';
-});
-
-// Elle a arrêté d'ecrire
-socket.on('notWritting', (pseudo) => {
-    document.getElementById('isWritting').textContent = '';
-});
-
-
-socket.on('oldMessages', (messages, user) => {
-    messages.forEach(message => {
-        if(message.sender === user) {
-            createElementFunction('oldMessagesMe', {sender: message.sender, content: message.content});
-        } else {
-            createElementFunction('oldMessages', {sender: message.sender, content: message.content});
-        }
-    });
-});
-socket.on('emitChannel', (channel) => {
-    if(channel.previousChannel) {    
-        document.getElementById(channel.previousChannel).classList.remove('inChannel')
-    }
-    document.getElementById(channel.newChannel).classList.add('inChannel')
-});
-socket.on('newChannel', (newChannel) => {
-    createChannel(newChannel)
-});
-
-socket.on('oldWhispers', (whispers) => {
-    whispers.forEach(whisper => {
-        createElementFunction('oldWhispers', {sender: whisper.sender, content: whisper.content});
-    });
-});
 
 
 // Quand on soumet le formulaire
@@ -104,15 +29,81 @@ document.getElementById('chatForm').addEventListener('submit', (e)=>{
         socket.emit('newMessage', textInput, receiver);
 
         if(receiver === "all") {
-            createElementFunction('newMessage', textInput);
+            createElementFunction('newMessageMe', textInput);
         }
 
-    }
-    else {
+    } else {
         return false;
     }
 
 });
+
+
+// On attends l'emission 'newUser' du serveur, si il est reçu on ajoute un message 
+// contenant les informations emises par le serveur, et ajoutant le user à la liste des users
+socket.on('newUser', (pseudo) => {
+    createElementFunction('newUser', pseudo);
+});
+socket.on('oldWhispers', (messages) => {
+    messages.forEach(message => {
+        createElementFunction('oldWhispers', message);
+    });
+})
+socket.on('newUserInDb', (pseudo) => {
+    newOption = document.createElement('option');
+    newOption.textContent = pseudo;
+    newOption.value = pseudo;
+    document.getElementById('receiverInput').appendChild(newOption);
+})
+
+// On check si le user se déconnecte
+socket.on('quitUser', (message) => {
+    createElementFunction('quitUser', message);
+});
+
+
+// On attend un nouveau message
+socket.on('newMessageAll', (content) => {
+    createElementFunction('newMessageAll', content);
+});
+// On attend un message privé
+socket.on('whisper', (content) => {
+    createElementFunction('whisper', content);
+});
+
+
+// Une personne est en train d'ecrire
+socket.on('writting', (pseudo) => {
+    document.getElementById('isWritting').textContent = pseudo + ' est en train d\'écrire';
+});
+// Elle a arrêté d'ecrire
+socket.on('notWritting', (pseudo) => {
+    document.getElementById('isWritting').textContent = '';
+});
+
+
+// On attend que le user change de channel
+socket.on('emitChannel', (channel) => {
+    if(channel.previousChannel) {    
+        document.getElementById(channel.previousChannel).classList.remove('inChannel')
+    }
+    document.getElementById(channel.newChannel).classList.add('inChannel')
+});
+// On attend qu'un nouveau channel soit créé
+socket.on('newChannel', (newChannel) => {
+    createChannel(newChannel)
+});
+// On attend que le serveur demande les anciens messages du channel
+socket.on('oldMessages', (messages, user) => {
+    messages.forEach(message => {
+        if(message.sender === user) {
+            createElementFunction('oldMessagesMe', {sender: message.sender, content: message.content});
+        } else {
+            createElementFunction('oldMessages', {sender: message.sender, content: message.content});
+        }
+    });
+});
+
 
 // S'il ecrit on emet 'writting' au serveur
 function writting() {
@@ -125,14 +116,13 @@ function notWritting() {
 }
 
 
-
 function createElementFunction(element, content) {
     
     const newElement = document.createElement("div");
 
     switch(element){
 
-        case 'newMessage':
+        case 'newMessageMe':
             newElement.classList.add(element, 'message');
             newElement.innerHTML = pseudo + ': ' + content;
             document.getElementById('msgContainer').appendChild(newElement);
@@ -153,13 +143,13 @@ function createElementFunction(element, content) {
 
         case 'newUser':
             newElement.classList.add(element, 'message');
-            newElement.textContent = content + ' à rejoint le chat';
+            newElement.textContent = content + ' a rejoint le chat';
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 
         case 'quitUser':
             newElement.classList.add(element, 'message');
-            newElement.textContent = content + ' à quitter le chat';
+            newElement.textContent = content + ' a quitté le chat';
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 
@@ -170,14 +160,14 @@ function createElementFunction(element, content) {
             break;
 
         case 'oldMessagesMe':
-            newElement.classList.add('newMessage', 'message');
+            newElement.classList.add('newMessageMe', 'message');
             newElement.innerHTML = content.sender + ': ' + content.content;
             document.getElementById('msgContainer').appendChild(newElement);
         break;
 
         case 'oldWhispers':
             newElement.classList.add(element, 'message');
-            newElement.innerHTML = content.sender + ' vous chuchote : ' + content.content;
+            newElement.textContent = content.sender + ' vous chuchote: ' + content.content;
             document.getElementById('msgContainer').appendChild(newElement);
             break;
 

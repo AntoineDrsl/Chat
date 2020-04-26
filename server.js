@@ -4,9 +4,6 @@
 var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
-var bodyParser = require('body-parser');
-var cors = require('cors');
-const cookieParser = require('cookie-parser');
 var mongoose = require('mongoose');
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -27,12 +24,6 @@ require('./models/room.model');
 var User = mongoose.model('user');
 var Chat = mongoose.model('chat');
 var Room = mongoose.model('room');
-
-//On dit à notre application d'utiliser nos modules
-app.use(express.urlencoded());
-app.use(bodyParser.json());
-app.use(cookieParser());
-app.use(cors());
 
 //On définit le dossier contenant notre CSS et JS
 app.use(express.static(__dirname + '/public'));
@@ -72,6 +63,16 @@ app.use(function(req, res, next) {
 
 
 
+var io = require('socket.io').listen(server);
+io.on('connection', (socket) => {
+
+    socket.on('pseudo', (pseudo) => {
+        socket.pseudo = pseudo;
+        socket.broadcast.emit('newUser', pseudo)
+    });
+
+});
+
 
 // IO
 
@@ -85,7 +86,6 @@ io.on('connection', (socket) => {
     socket.on('pseudo', (pseudo) => {
         
         User.findOne({ pseudo: pseudo }, (err, user) => {
-            //Si il existe, on connecte le user en mettant son pseudo dans les cookies
             if(user) {
 
                 // On join automatiquement le channel "salon1" par défaut
@@ -96,16 +96,6 @@ io.on('connection', (socket) => {
                 connectedUsers.push(socket);
                 // On previent les autres
                 socket.broadcast.to(socket.channel).emit('newUser', pseudo);
-                
-                //On va chercher les derniers messages privés
-                Chat.find({receiver: socket.pseudo}, (err, whispers) => {
-                    if(!whispers) {
-                        return false;
-                    } else {
-                        socket.emit('oldWhispers', whispers);
-                    }
-                });
-
 
             } else {
                 var user = new User();
@@ -124,48 +114,17 @@ io.on('connection', (socket) => {
 
     });
 
+    socket.on('oldWhispers', (pseudo) => {
+        Chat.find({ receiver: pseudo }, (err, messages) => {
 
-    function _joinRoom(channelParam) {
-
-        //Si l'utilisateur est déjà dans un channel, on le stock
-        var previousChannel = ''
-        if(socket.channel) {
-            previousChannel = socket.channel; 
-        }
-
-        //On quitte tous les channels et on rejoint le channel ciblé
-        socket.leaveAll();
-        socket.join(channelParam);
-        socket.channel = channelParam;
-
-        Room.findOne({name: socket.channel}, (err, channel) => {
-            if(channel){
-                Chat.find({_id_room: socket.channel}, (err, messages) => {
-                    if(!messages){
-                        return false;
-                    }
-                    else{
-                        socket.emit('oldMessages', messages, socket.pseudo);
-                        //Si l'utilisateur vient d'un autre channel, on le fait passer, sinon on ne fait passer que le nouveau
-                        if(previousChannel) {
-                            socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
-                        } else {
-                            socket.emit('emitChannel', {newChannel: socket.channel});
-                        }
-                    }
-                });
+            if(err) {
+                return false;
+            } else {
+                socket.emit('oldWhispers', messages)
             }
-            else {
-        
-                var room = new Room();
-                room.name = socket.channel;
-                room.save();
-                
-                socket.broadcast.emit('newChannel', socket.channel);
-                socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
-            }
-        })
-    }
+
+        }).limit(3);
+    });
 
     socket.on('changeChannel', (channel) => {
         _joinRoom(channel);
@@ -182,7 +141,7 @@ io.on('connection', (socket) => {
             chat.content = message;
             chat.save();
 
-            socket.broadcast.to(socket.channel).emit('newMessageAll', {message: message, pseudo: socket.pseudo, id: chat._id});
+            socket.broadcast.to(socket.channel).emit('newMessageAll', {message: message, pseudo: socket.pseudo});
 
         } else {
 
@@ -226,6 +185,48 @@ io.on('connection', (socket) => {
     socket.on('notWritting', (pseudo) => {
         socket.broadcast.to(socket.channel).emit('notWritting', pseudo);
     });
+
+
+    function _joinRoom(channelParam) {
+
+        //Si l'utilisateur est déjà dans un channel, on le stock
+        var previousChannel = ''
+        if(socket.channel) {
+            previousChannel = socket.channel; 
+        }
+
+        //On quitte tous les channels et on rejoint le channel ciblé
+        socket.leaveAll();
+        socket.join(channelParam);
+        socket.channel = channelParam;
+
+        Room.findOne({name: socket.channel}, (err, channel) => {
+            if(channel){
+                Chat.find({_id_room: socket.channel}, (err, messages) => {
+                    if(!messages){
+                        return false;
+                    }
+                    else{
+                        socket.emit('oldMessages', messages, socket.pseudo);
+                        //Si l'utilisateur vient d'un autre channel, on le fait passer, sinon on ne fait passer que le nouveau
+                        if(previousChannel) {
+                            socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
+                        } else {
+                            socket.emit('emitChannel', {newChannel: socket.channel});
+                        }
+                    }
+                });
+            }
+            else {
+                var room = new Room();
+                room.name = socket.channel;
+                room.save();
+                
+                socket.broadcast.emit('newChannel', socket.channel);
+                socket.emit('emitChannel', {previousChannel: previousChannel, newChannel: socket.channel});
+            }
+        })
+    }
 
 });
 
