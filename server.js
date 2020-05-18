@@ -62,18 +62,6 @@ app.use(function(req, res, next) {
 });
 
 
-
-var io = require('socket.io').listen(server);
-io.on('connection', (socket) => {
-
-    socket.on('pseudo', (pseudo) => {
-        socket.pseudo = pseudo;
-        socket.broadcast.emit('newUser', pseudo)
-    });
-
-});
-
-
 // IO
 
 var io = require('socket.io').listen(server);
